@@ -3,6 +3,10 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.30114.105
 MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{BAD0A2BD-D698-4BA6-A5BD-6AD45DD711DD}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Talorants.Blog.Mvc", "src\Talorants.Blog.Mvc\Talorants.Blog.Mvc.csproj", "{A791960C-DA51-4401-B4E5-0B2BB037293D}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -10,5 +14,14 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{A791960C-DA51-4401-B4E5-0B2BB037293D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A791960C-DA51-4401-B4E5-0B2BB037293D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A791960C-DA51-4401-B4E5-0B2BB037293D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A791960C-DA51-4401-B4E5-0B2BB037293D}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{A791960C-DA51-4401-B4E5-0B2BB037293D} = {BAD0A2BD-D698-4BA6-A5BD-6AD45DD711DD}
 	EndGlobalSection
 EndGlobal
