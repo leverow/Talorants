@@ -1,0 +1,39 @@
+@model LoginViewModel
+
+<div class="login-page">
+    <div class="login-card">
+        <header class="header">
+            Personal cabinet
+        </header>
+        <form class="form" asp-controller="account" asp-action="login" method="post">
+            @Html.HiddenFor(m => m.ReturnUrl)
+            @Html.ValidationSummary(true, string.Empty, new { Class = "text-yellow" }, "span")
+            <div>
+                <label for="username" class="form-label">
+                    Username
+                </label>
+                <input asp-for="Username" type="text" class="form-control mb-2" id="Username" placeholder='UserName'>
+                <span asp-validation-for="Username" class="text-yellow"></span>
+            </div>
+            <div class="mt-4">
+                <label for="password" class="form-label">
+                    Password
+                </label>
+                <input asp-for="Password" type="password" class="form-control mb-2" id="password"
+                    placeholder='Password'>
+                <span asp-validation-for="Password" class="text-yellow"></span>
+            </div>
+            <div>
+                <a href="#">Forgot Password ?</a>
+            </div>
+            <div>
+                <a href="register?ReturnUrl=@Model.ReturnUrl">Don't have an account yet ?</a>
+            </div>
+            <footer class="footer text-center mt-5">
+                <button type="submit" class="btn btn-primary px-5 py-2">
+                    Sign in
+                </button> 
+            </footer>
+        </form>
+    </div>
+</div>
