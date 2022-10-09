@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Talorants.Blog.Mvc.Data;
 using Talorants.Blog.Mvc.Entities;
+using Talorants.Blog.Mvc.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -22,6 +23,12 @@ builder.Services.AddIdentity<AppUser, IdentityRole>(options =>
 })
 .AddRoles<IdentityRole>()
 .AddEntityFrameworkStores<AppDbContext>();
+
+builder.Services.AddHttpClient("Messaging", client => 
+    client.BaseAddress = new Uri(builder.Configuration.GetSection("Messaging").GetValue("BaseUrl", string.Empty)));
+
+builder.Services.AddScoped<IUserManagementService, UserManagementService>();
+builder.Services.AddScoped<IEmailSender, EmailSender>();
 
 var app = builder.Build();
 

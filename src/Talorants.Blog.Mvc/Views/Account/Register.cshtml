@@ -1,0 +1,23 @@
+@model RegisterViewModel
+
+<form asp-action="Register" asp-controller="Account" method="post" class="form-signin">
+    @Html.HiddenFor(m => m.ReturnUrl)
+    @Html.ValidationSummary(true, string.Empty, new { Class = "text-yellow" }, "span")
+    <input asp-for="Username" type="text" class='form-control' placeholder="Username">
+    <span asp-validation-for="Username" class="text-danger"></span>
+
+    <input asp-for="FullName" type="text" id="inputFullname" class='form-control' placeholder="Fullname">
+    <span asp-validation-for="FullName" class="text-danger"></span>
+
+    <input asp-for="Email" type="text" id="inputEmail" class="form-control" placeholder="Email address">
+    <span asp-validation-for="Email" class="text-danger"></span>
+
+    <input asp-for="Password" type="password" id="inputPassword" class="form-control" placeholder="Password">
+    <span asp-validation-for="Password" class="text-danger"></span>
+
+    <input asp-for="ConfirmPassword" type="password" id="inputConfirmPassword" class="form-control" placeholder="Type password again">
+    <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
+
+    <button class="btn btn-lg btn-primary w-100" type="submit">Sign up</button>
+    <p class="mt-5 mb-3 text-muted">2022</p>
+</form>
