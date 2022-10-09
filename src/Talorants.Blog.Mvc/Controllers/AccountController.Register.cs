@@ -5,7 +5,7 @@ namespace Talorants.Blog.Mvc.Controllers;
 
 public partial class AccountController
 {
-    public IActionResult Register(string returnUrl)
+    public IActionResult Register(string? returnUrl)
     => View(new RegisterViewModel() {ReturnUrl = returnUrl});
 
     [HttpPost]
