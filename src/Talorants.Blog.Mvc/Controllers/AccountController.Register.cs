@@ -14,7 +14,7 @@ public partial class AccountController
         if(!ModelState.IsValid)
             return View(model);
         
-        var createUserResult = await _userManagement.CreateUserAsync(model.FullName,model.Username,model.Email,model.Password);
+        var createUserResult = await _userManagement.CreateUserAsync(model.FullName,model.Username,model.Email,model.Password,model.UserImage);
         _logger.LogInformation("New user was created");
         ModelState.AddModelError(string.Empty, createUserResult.ErrorMessage ?? string.Empty);
         return LocalRedirect($"/account/login?returnUrl={model.ReturnUrl}");

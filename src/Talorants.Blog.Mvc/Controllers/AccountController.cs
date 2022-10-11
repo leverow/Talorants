@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.StaticFiles;
 using Talorants.Blog.Mvc.Entities;
 using Talorants.Blog.Mvc.Services;
 
@@ -19,5 +20,20 @@ public partial class AccountController : Controller
         _logger = logger;
         _userManagement = userManagement;
         _signInManager = signInManager;
+    }
+    
+    [HttpGet("[controller]/userImage")]
+    public async Task<FileContentResult> GetUserImage(string? name)
+    {
+        var retrievedUserPhotoResult = await _userManagement.GetUserPhotoByUserNameAsync(name);
+        if(!retrievedUserPhotoResult.IsSuccess) return new FileContentResult(System.IO.File.ReadAllBytes(Path.Combine(new string[5]{ "wwwroot", "Media", "User", "Images", "avatar.png" })), "image/png");
+        string contentType = "";
+        new FileExtensionContentTypeProvider().TryGetContentType(retrievedUserPhotoResult.Data!, out contentType);
+ 
+        string path = Path.Combine(new string[5]{ "wwwroot", "Media", "User", "Images", retrievedUserPhotoResult.Data! });
+ 
+        byte[] bytes = System.IO.File.ReadAllBytes(path);
+ 
+        return new FileContentResult(bytes, contentType);
     }
 }
