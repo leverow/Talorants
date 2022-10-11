@@ -1,6 +1,6 @@
 @model RegisterViewModel
 
-<form asp-action="Register" asp-controller="Account" method="post" class="form-signin">
+<form asp-action="Register" asp-controller="Account" method="post" class="form-signin" enctype="multipart/form-data">
     @Html.HiddenFor(m => m.ReturnUrl)
     @Html.ValidationSummary(true, string.Empty, new { Class = "text-yellow" }, "span")
     <input asp-for="Username" type="text" class='form-control' placeholder="Username">
@@ -18,6 +18,10 @@
     <input asp-for="ConfirmPassword" type="password" id="inputConfirmPassword" class="form-control" placeholder="Type password again">
     <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
 
+    <label asp-for="@Model.UserImage" class="form-label">Avatar</label>
+    <input type="file" accept="image/*" asp-for="@Model.UserImage" class="form-control">
+    <span asp-validation-for="UserImage" class="text-danger"></span>
+    
     <button class="btn btn-lg btn-primary w-100" type="submit">Sign up</button>
     <p class="mt-5 mb-3 text-muted">2022</p>
 </form>

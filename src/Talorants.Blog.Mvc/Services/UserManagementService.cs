@@ -22,14 +22,16 @@ public class UserManagementService : IUserManagementService
         _userManager = userManager;
         _emailSender = emailSender;
     }
-    public async ValueTask<Result> CreateUserAsync(string fullName, string userName, string email, string password)
+    public async ValueTask<Result> CreateUserAsync(string fullName, string userName, string email, string password,IFormFile userImage)
     {
-        var validationResult = Validate(fullName, userName, email);
+        var validationResult = Validate(fullName, userName, email, userImage);
         if(!validationResult.IsSuccess) return new("One or more fields are invalid.");
 
+        var savedUserImageResult = await SaveUserImageAsync(userImage);
         var user = new AppUser(fullName,userName,email)
         {
-            TwoFactorEnabled = true
+            TwoFactorEnabled = true,
+            ImageUrl = savedUserImageResult.Data
         };
         try
         {
@@ -93,17 +95,54 @@ public class UserManagementService : IUserManagementService
         }
     }
 
-    public async ValueTask<Result> UpdateUserAsync(string? id, string fullName, string userName, string email, string password)
+    public async ValueTask<Result<UserModel>> GetUserByUserNameAsync(string? userName)
+    {
+        if(string.IsNullOrWhiteSpace(userName)) return new("Username is invalid.");
+        try
+        {
+            var existingUser = await _userManager.FindByNameAsync(userName);
+            if(existingUser is null) return new("The user with given username not found");
+
+            return new(true) { Data = ToModel(existingUser)};
+        }
+        catch (Exception e)
+        {
+            _logger.LogError($"Error occured at {nameof(UserManagementService)}", e);
+            throw new("Couldn't retrieve the user. Contact support", e);
+        }
+    }
+
+    public async ValueTask<Result<string>> GetUserPhotoByUserNameAsync(string? userName)
+    {
+        if(string.IsNullOrWhiteSpace(userName)) return new("Username is invalid.");
+        try
+        {
+            var existingUser = await _userManager.FindByNameAsync(userName);
+            if(existingUser is null) return new("The user with given username not found");
+
+            return new(true) { Data = existingUser.ImageUrl ?? "avatar.png"};
+        }
+        catch (Exception e)
+        {
+            _logger.LogError($"Error occured at {nameof(UserManagementService)}", e);
+            throw new("Couldn't retrieve profile image. Contact support", e);
+        }
+    }
+
+    public async ValueTask<Result> UpdateUserAsync(string? id, string fullName, string userName, string email, string password, IFormFile userImage)
     {
         if(string.IsNullOrWhiteSpace(id)) return new("Id is invalid.");
 
-        var validationResult = Validate(fullName, userName, email);
+        var validationResult = Validate(fullName, userName, email, userImage);
         if(!validationResult.IsSuccess) return new("One or more fields are invalid.");
         
+        var savedUserImageResult = await SaveUserImageAsync(userImage);
+
         var existingUser = await _userManager.FindByIdAsync(id);
         existingUser.Fullname = fullName;
         existingUser.UserName = userName;
         existingUser.Email = email;
+        existingUser.ImageUrl = savedUserImageResult.Data;
 
         try
         {
@@ -122,7 +161,7 @@ public class UserManagementService : IUserManagementService
     public async ValueTask<bool> ExistsAsync(string? id)
     => await _userManager.Users.AnyAsync(u => u.Id == id);
 
-    private Result Validate(string fullname, string username, string? email)
+    private Result Validate(string fullname, string username, string? email, IFormFile image)
     {
         if(string.IsNullOrWhiteSpace(fullname))
             return new("Invalid fullname.");
@@ -132,7 +171,12 @@ public class UserManagementService : IUserManagementService
         
         if(!string.IsNullOrWhiteSpace(email) && !new EmailAddressAttribute().IsValid(email))
             return new("Invalid email.");
-
+        
+        var supportedTypes = new[] { "jpg", "png"};  
+        var fileExt = System.IO.Path.GetExtension(image.FileName).Substring(1);  
+        if (!supportedTypes.Contains(fileExt))  
+            return new("Image extension is invalid - Only Upload Jpg/Png File");
+        
         return new(true);
     }
 
@@ -143,6 +187,20 @@ public class UserManagementService : IUserManagementService
         FullName = entity.Fullname,
         Username = entity.UserName,
         Email = entity.Email,
-        PasswordHash = entity.PasswordHash
+        PasswordHash = entity.PasswordHash,
+        UserImageUrl = entity.ImageUrl
     };
+
+    private async Task<Result<string>> SaveUserImageAsync(IFormFile? userImageFile)
+    {
+        if(userImageFile is null) return new(false) { Data = "avatar.png" };
+
+        var imagePath = Guid.NewGuid().ToString("N") + Path.GetExtension(userImageFile.FileName);
+
+        var ms = new MemoryStream();
+        await userImageFile.CopyToAsync(ms);
+        System.IO.File.WriteAllBytes(Path.Combine(new string[5]{ "wwwroot", "Media", "User", "Images", imagePath }), ms.ToArray());
+
+        return new(true) { Data = imagePath };
+    }
 }
