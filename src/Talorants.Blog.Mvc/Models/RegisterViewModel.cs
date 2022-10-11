@@ -33,5 +33,5 @@ public class RegisterViewModel
     [AllowedExtensions(new string[] { ".jpg", ".png" })]
     public IFormFile UserImage { get; set; }
     
-    
+    public string[] Roles { get; set; }   
 }

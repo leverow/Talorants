@@ -6,6 +6,8 @@ public class AppUser : IdentityUser
 {
     public string? Fullname { get; set; }
     public string? ImageUrl { get; set; }
+    public string[] Roles { get; set; }
+    
 
     [Obsolete("Used only for entity binding")]
     public AppUser() { }
