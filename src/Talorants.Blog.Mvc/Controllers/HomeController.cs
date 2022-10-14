@@ -1,6 +1,8 @@
-﻿using System.Diagnostics;
+﻿using System.Collections.Immutable;
+using System.Diagnostics;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
 using Talorants.Blog.Mvc.Models;
 
 namespace Talorants.Blog.Mvc.Controllers;
@@ -8,10 +10,12 @@ namespace Talorants.Blog.Mvc.Controllers;
 public class HomeController : Controller
 {
     private readonly ILogger<HomeController> _logger;
+    private readonly IOptions<TelegramAuthorization> _options;
 
-    public HomeController(ILogger<HomeController> logger)
+    public HomeController(ILogger<HomeController> logger,IOptions<TelegramAuthorization> options)
     {
         _logger = logger;
+        _options = options;
     }
 
     public IActionResult Index()

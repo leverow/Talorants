@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Talorants.Blog.Mvc.Data;
 using Talorants.Blog.Mvc.Entities;
+using Talorants.Blog.Mvc.Models;
 using Talorants.Blog.Mvc.Services;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -29,6 +30,9 @@ builder.Services.AddHttpClient("Messaging", client =>
 
 builder.Services.AddScoped<IUserManagementService, UserManagementService>();
 builder.Services.AddScoped<IEmailSender, EmailSender>();
+builder.Services.AddSingleton<SettingsHandler>();
+
+builder.Services.Configure<TelegramAuthorization>(builder.Configuration.GetSection("TelegramAuthorization"));
 
 var app = builder.Build();
 
@@ -38,7 +42,7 @@ if (!app.Environment.IsDevelopment())
     app.UseHsts();
 }
 
-app.UseHttpsRedirection();
+// app.UseHttpsRedirection();
 app.UseStaticFiles();
 
 app.UseRouting();
