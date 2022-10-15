@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Identity;
 using Talorants.Blog.Mvc.Entities;
 
-public class Seed
+public sealed class Seed
 {
     public static async Task InitializeRolesAsync(IApplicationBuilder app)
     {

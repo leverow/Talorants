@@ -1,8 +1,12 @@
+using System.Net;
 using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Identity;
 using Talorants.Blog.Mvc.Entities;
 using Talorants.Blog.Mvc.Models;
 using Microsoft.EntityFrameworkCore;
+using Talorants.Blog.Mvc.Extensions;
+using System.Security.Cryptography;
+using System.Text;
 
 namespace Talorants.Blog.Mvc.Services;
 
@@ -33,6 +37,7 @@ public class UserManagementService : IUserManagementService
             TwoFactorEnabled = true,
             ImageUrl = savedUserImageResult.Data
         };
+        
         try
         {
             var createUserResult = await _userManager.CreateAsync(user, password);
@@ -202,5 +207,132 @@ public class UserManagementService : IUserManagementService
         System.IO.File.WriteAllBytes(Path.Combine(new string[5]{ "wwwroot", "Media", "User", "Images", imagePath }), ms.ToArray());
 
         return new(true) { Data = imagePath };
+    }
+
+    private async Task<Result<string>> SaveUserImageAsync(string? imageUrl)
+    {
+        if(imageUrl is null) return new(false) { Data = "avatar.png" };
+        var isSucceed = false;
+        var imageName = Guid.NewGuid().ToString("N") + ".jpg";
+        using (HttpClient webClient = new HttpClient()) 
+        {
+            byte [] data = await webClient.GetByteArrayAsync(imageUrl);
+
+            using (MemoryStream mem = new MemoryStream(data)) 
+            {
+                await System.IO.File.WriteAllBytesAsync(Path.Combine(new string[5]{ "wwwroot", "Media", "User", "Images", imageName }), mem.ToArray());
+                isSucceed = true;
+            } 
+        }
+        if(isSucceed)
+            return new(true) { Data = imageName };
+        else
+            return new(false) { Data = "avatar.png"};
+    }
+
+    public async ValueTask<bool> IsTelegramUserIdExistsAsync(ulong telegramUserId)
+    => await _userManager.Users.AnyAsync(u => u.TelegramUserId == telegramUserId);
+
+    public async ValueTask<Result> CreateUserAsync(ulong id, string? firstName, string? lastName, string? userName, string? userImageUrl)
+    {
+        if(id == default) return new("Telegram user id is invalid");
+
+        var savedUserImageResult = await SaveUserImageAsync(userImageUrl);
+        var user = new AppUser((firstName + lastName) ?? "anonymous", userName ?? "user"+id, string.Empty)
+        {
+            TwoFactorEnabled = true,
+            Roles = new string[]
+            {
+                "user"
+            },
+            TelegramUserId = id,
+            ImageUrl = savedUserImageResult.Data
+        };
+        try
+        {
+            var createUserResult = await _userManager.CreateAsync(user);
+            if(createUserResult is null) return new("Couldn't create the user. Contact support.");
+
+            if(!createUserResult.Succeeded)
+            {
+                var errors = string.Join('\n', createUserResult.Errors.Select(e => e.Code));
+                return new(errors);
+            }
+            return new(true);
+        }
+        catch(DbUpdateException dbUpdateException)
+        {
+            _logger.LogInformation("Error occured:", dbUpdateException);
+            return new("Couldn't create the user. Contact support.");
+        }
+        catch(Exception e)
+        {
+            _logger.LogError($"Error occured at {nameof(UserManagementService)}", e);
+            throw new("Couldn't create the user. Contact support.", e);
+        }
+    }
+
+    public async ValueTask<Result<AppUser>> GetUserByTelegramIdAsync(ulong id)
+    {
+        if(id == default) return new("Telegram user id is invalid.");
+        try
+        {
+            var existingUser = await _userManager.Users.FirstOrDefaultAsync(u => u.TelegramUserId == id);
+            if(existingUser is null) return new("The user with given Telegram User ID not found");
+
+            return new(true) { Data = existingUser};
+        }
+        catch (Exception e)
+        {
+            _logger.LogError($"Error occured at {nameof(UserManagementService)}", e);
+            throw new("Couldn't retrieve the user. Contact support", e);
+        }
+    }
+
+    public bool IsAuthorizedInTelegram(ulong id, string? first_name, string? last_name, string? username, string? photo_url, ulong auth_date, string? checkHash, string key)
+    {
+        Dictionary<string, string?> auth_data = new Dictionary<string, string?>()
+        {
+            {"id", $"{id}"},
+            {"first_name", first_name},
+            {"last_name", last_name},
+            {"username", username},
+            {"photo_url", photo_url},
+            {"auth_date", $"{auth_date}"}
+        };
+
+        List<string?> rawData = new List<string?>();
+        
+        foreach(var pair in auth_data)
+        {
+            if(pair.Value is null) continue;
+            rawData.Add($"{pair.Key}={pair.Value}");
+        }
+        rawData.Sort();
+
+        string hashData = string.Empty;
+        
+        for(int i = 0; i < rawData.Count; i++)
+            hashData += $"{rawData[i]}{(i != rawData.Count-1 ? " " : "")}";
+        
+        var result = GenerateHashFromRawDataAndKey(hashData,key);
+        if(result != checkHash)
+            return false;
+        else
+            return true;
+    }
+    private string GenerateHashFromRawDataAndKey(string rawData, string key)
+    {
+        rawData = rawData.Replace(" ","\n");
+        using (SHA256 sha256Hash = SHA256.Create())
+        {
+            byte[] bytes = sha256Hash.ComputeHash(Encoding.UTF8.GetBytes(key));
+            var dataBytes = Encoding.UTF8.GetBytes(rawData);
+            byte[] hashmessage = new HMACSHA256(bytes).ComputeHash(dataBytes);
+            string sbinary = "";
+            for (int i = 0; i < hashmessage.Length; i++)
+                sbinary += hashmessage[i].ToString("X2");
+            return sbinary.ToLower();
+        }
     }
 }

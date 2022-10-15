@@ -1,7 +1,9 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.StaticFiles;
+using Microsoft.Extensions.Options;
 using Talorants.Blog.Mvc.Entities;
+using Talorants.Blog.Mvc.Models;
 using Talorants.Blog.Mvc.Services;
 
 namespace Talorants.Blog.Mvc.Controllers;
@@ -11,15 +13,18 @@ public partial class AccountController : Controller
     private readonly ILogger<AccountController> _logger;
     private readonly IUserManagementService _userManagement;
     private readonly SignInManager<AppUser> _signInManager;
+    private readonly IOptions<TelegramAuthorization> _options;
 
     public AccountController(
         ILogger<AccountController> logger,
         IUserManagementService userManagement,
-        SignInManager<AppUser> signInManager)
+        SignInManager<AppUser> signInManager,
+        IOptions<TelegramAuthorization> options)
     {
         _logger = logger;
         _userManagement = userManagement;
         _signInManager = signInManager;
+        _options = options;
     }
     
     [HttpGet("[controller]/userImage")]
